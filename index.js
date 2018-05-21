@@ -15,12 +15,15 @@ client.on('error', (err) => {
 	console.log('Error', err)
 })
 
-function getRandomNum() {
+function getRandomNum(callback) {
+	if (callback) {
+		callback()
+		return
+	}
 	const randomNumF = Math.random() * 100
 	randomNum = randomNumF.toFixed(0)
 	console.log('randomNum', randomNum)
 	client.set(cacheKey, `${randomNum}`, redis.print)
-	return randomNum
 }
 
 app.get('/start', (req, res) => {
@@ -29,16 +32,19 @@ app.get('/start', (req, res) => {
 })
 
 app.get('/:number', (req, res) => {
-	const params = req ? req.params : 0
-	const number = params ? params.number : 0
-	let responContent = ''
-	if (number > randomNum) {
-		responContent = 'bigger'
-	} else if (number < randomNum) {
-		responContent = 'smaller'
-	} else if (number === randomNum) {
-		responContent = 'equal'
-		getRandomNum()
-	}
-	res.send(responContent)
+	getRandomNum(() => {
+		const params = req ? req.params : 0
+		const number = params ? params.number : 0
+		console.log('number', number)
+		let responContent = ''
+		if (number > randomNum) {
+			responContent = 'bigger'
+		} else if (number < randomNum) {
+			responContent = 'smaller'
+		} else if (number === randomNum) {
+			responContent = 'equal'
+			getRandomNum()
+		}
+		res.send(responContent)
+	})
 })
