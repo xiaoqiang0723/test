@@ -1,11 +1,15 @@
 module.exports = {
     "env": {
-        "browser": true,
-        "commonjs": true,
-        "es6": true
+        "es6": true,
+        "node": true
     },
-    "extends": "eslint:recommended",
+    "extends": "airbnb-base",
+    "parserOptions": {
+        "ecmaVersion": 8
+    },
+    "root": true,
     "rules": {
+        "no-tabs": 0,
         "indent": [
             "error",
             "tab"
