@@ -22,7 +22,6 @@ function getRandomNum(callback) {
 	}
 	const randomNumF = Math.random() * 100
 	randomNum = randomNumF.toFixed(0)
-	console.log('randomNum', randomNum)
 	client.set(cacheKey, `${randomNum}`, redis.print)
 }
 
