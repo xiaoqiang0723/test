@@ -17,7 +17,7 @@ client.on('error', (err) => {
 
 function getRandomNum(callback) {
 	if (callback) {
-		client.get(cacheKey, callback())
+		client.get(cacheKey, callback)
 		return
 	}
 	const randomNumF = Math.random() * 100
