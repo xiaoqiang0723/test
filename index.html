@@ -1,0 +1,35 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Language" content="zh-cn" />
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+<title></title>
+</head>
+<body>
+    <div style="margin: 5% 5% 5% 30%;width: 80%;position: absolute">
+        <h3 style="color:aqua;font-size: 40px;left:10%">Number Guesser</h3>
+        <input style="width: 23%;" id="numberInput" />
+        <button onclick="restart()" id="restartButton" style="color: blue;margin-left: 20%;position: absolute">Restart</button>
+        <button onclick="guesserNum()" id="submitButton" style="color: blue;margin-left: 5%">Submit</button>
+    </div>
+    <div style="position:absolute;margin-top: 20%;margin-left: 30%">
+        <h3 id="resultTxt"></h3>
+        <!-- Equal/Big/Small/OK -->
+    </div>
+</body>
+<script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
+<script>
+    function restart(){
+        $.get('/start',function(){
+            $('#resultTxt').text('OK');
+        })
+    }
+
+    function guesserNum(){
+        var numberInput = $('#numberInput').val()
+        $.get('/'+numberInput,function(result){
+            $('#resultTxt').text(result)
+        })
+    }
+</script>
+</html>
