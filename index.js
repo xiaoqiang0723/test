@@ -22,13 +22,13 @@ function setRandomNum() {
 	client.set(cacheKey, `${randomNum}`, redis.print)
 }
 
-// app.get('/index.html', (req, res) => {
-// 	res.sendFile(`${__dirname}/index.html`)
-// })
+app.get('/index.html', (req, res) => {
+	res.sendFile(`${__dirname}/index.html`)
+})
 
 app.get('/start', (req, res) => {
 	setRandomNum()
-	res.sendFile(`${__dirname}/index.html`)
+	res.send('OK')
 })
 
 app.get('/:number', (req, res) => {
