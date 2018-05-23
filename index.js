@@ -1,5 +1,6 @@
 const express = require('express')
 const redis = require('redis')
+const serveStatic = require('serve-static')
 
 const	app = express()
 const	port = 3000
@@ -10,7 +11,7 @@ let	randomNum = 0
 const	cacheKey = 'randomNumKey'
 const	client = redis.createClient()
 app.listen(port, ip)
-app.use(express.static('/'))
+app.use(serveStatic('.', { index: ['index.html', 'index.htm'] }))
 
 client.on('error', (err) => {
 	console.log('Error', err)
@@ -22,11 +23,7 @@ function setRandomNum() {
 	client.set(cacheKey, `${randomNum}`, redis.print)
 }
 
-app.get('/index.html', (req, res) => {
-	res.sendFile(`${__dirname}/index.html`)
-})
-
-app.get('/start', (req, res) => {
+app.post('/start', (req, res) => {
 	setRandomNum()
 	res.send('OK')
 })

@@ -20,7 +20,7 @@
 <script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
 <script>
     function restart(){
-        $.get('/start',function(){
+        $.post('/start',function(){
             $('#resultTxt').text('OK');
             $('#restartButton').text('Restart');
             $('#numberInput').attr('disabled',false)
