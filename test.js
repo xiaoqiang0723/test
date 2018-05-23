@@ -1,49 +1,25 @@
 /* eslint-env node, mocha */
 require('should')
-const http = require('http')
+const request = require('request')
 
 describe('/start接口测试', () => {
 	it('/start fun start', (done) => {
-		http.request(
-			{
-				hostname: 'localhost',
-				port: 3000,
-				path: '/start',
-				method: 'POST',
-			},
-			(res) => {
-				res.boby = ''
-				res.on('data', (chunk) => {
-					res.boby += chunk
-				})
-				res.on('end', () => {
-					res.boby.should.be.equal('OK')
-					done()
-				})
-			},
-		).end()
+		request.post('http:localhost:3000/start', (error, response, body) => {
+			if (!error && response.statusCode === 200) {
+				body.should.be.equal('OK')
+			}
+			done()
+		})
 	})
 })
 
 describe('/:number接口测试', () => {
 	it('/:number fun start', (done) => {
-		http.request(
-			{
-				hostname: 'localhost',
-				port: 3000,
-				path: '/30',
-				method: 'GET',
-			},
-			(res) => {
-				res.boby = ''
-				res.on('data', (chunk) => {
-					res.boby += chunk
-				})
-				res.on('end', () => {
-					res.boby.should.be.equalOneOf(['bigger', 'smaller', 'equal'])
-					done()
-				})
-			},
-		).end()
+		request('http:localhost:3000/20', (error, response, body) => {
+			if (!error && response.statusCode === 200) {
+				body.should.be.equalOneOf(['bigger', 'smaller', 'equal'])
+			}
+			done()
+		})
 	})
 })
