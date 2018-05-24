@@ -8,8 +8,11 @@ describe('/start接口测试', () => {
 			// console.log('response', response)
 			if (!error && response.statusCode === 200) {
 				body.should.be.equal('OK')
+				done()
 			}
-			done()
+			if (error) {
+				done(error)
+			}
 		})
 	})
 })
@@ -20,41 +23,46 @@ describe('/:number接口测试', () => {
 			// console.log('response', response)
 			if (!error && response.statusCode === 200) {
 				body.should.be.equalOneOf(['bigger', 'smaller', 'equal'])
+				done()
 			}
-			done()
+			if (error) {
+				done(error)
+			}
 		})
 	})
 })
 
 function gameTest(i, callback) {
-	try {
-		request(`http://localhost:3000/${i}`, (error, response, body) => {
-			console.log(i)
-			console.log(body)
-			if (!error && response.statusCode === 200) {
-				body.should.match((n) => {
-					if (n === 'equal') {
-						callback()
-					} else {
-						gameTest(i + 1)
-					}
-				})
-			}
-		})
-	} catch (e) {
-		console.log(e)
-	}
+	request(`http://localhost:3000/${i}`, (error, response, body) => {
+		console.log(i)
+		console.log(body)
+		if (!error && response.statusCode === 200) {
+			body.should.match((n) => {
+				if (n === 'equal') {
+					callback()
+				} else {
+					gameTest(i + 1)
+				}
+			})
+		}
+		if (error) {
+			callback(error)
+		}
+	})
 	// }))
 }
 
 
 describe('/完整测试', () => {
 	beforeEach(async () => {
-		await request.post('http://localhost:3000/start', (error, response, body) => {
-			if (!error && response.statusCode === 200) {
-				return body
-			}
-			return ''
+		await new Promise((resolve, reject) => {
+			request.post('http://localhost:3000/start', (error, response, body) => {
+				// error.should.be.equal('undefined')
+				if (!error && response.statusCode === 200) {
+					resolve(body)
+				}
+				reject()
+			})
 		})
 	})
 	describe('/猜数开始', () => {

@@ -6,8 +6,6 @@ const	app = express()
 const	port = 3000
 const	ip = '127.0.0.1'
 
-let	randomNum = 0
-
 const	cacheKey = 'randomNumKey'
 const	client = redis.createClient()
 app.listen(port, ip)
@@ -17,29 +15,33 @@ client.on('error', (err) => {
 	console.log('Error', err)
 })
 
-function setRandomNum() {
+function setRandomNum(callback) {
 	const randomNumF = Math.random() * 100
-	randomNum = randomNumF.toFixed(0)
-	client.set(cacheKey, `${randomNum}`, redis.print)
+	const randomNum = randomNumF.toFixed(0)
+	client.set(cacheKey, `${randomNum}`, callback)
 }
 
 app.post('/start', (req, res) => {
-	setRandomNum()
-	console.log(randomNum)
-	res.send('OK')
+	setRandomNum(() => {
+		res.send('OK')
+	})
 })
 
 app.get('/:number', (req, res) => {
-	client.get(cacheKey, () => {
+	client.get(cacheKey, (error, num) => {
+		if (error) {
+			res.send(error)
+		}
 		const params = req ? req.params : 0
 		const number = params ? params.number : 0
-		console.log('number', number)
 		let responContent = ''
-		if (number > randomNum) {
+		if (Number(number) > Number(num)) {
 			responContent = 'bigger'
-		} else if (number < randomNum) {
+		}
+		if (Number(number) < Number(num)) {
 			responContent = 'smaller'
-		} else if (number === randomNum) {
+		}
+		if (Number(number) === Number(num)) {
 			responContent = 'equal'
 			setRandomNum()
 		}
