@@ -25,6 +25,7 @@ function setRandomNum() {
 
 app.post('/start', (req, res) => {
 	setRandomNum()
+	console.log(randomNum)
 	res.send('OK')
 })
 
