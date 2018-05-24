@@ -32,19 +32,14 @@ app.get('/:number', (req, res) => {
 		if (error) {
 			res.send(error)
 		}
-		const params = req ? req.params : 0
-		const number = params ? params.number : 0
-		let responContent = ''
-		if (Number(number) > Number(num)) {
-			responContent = 'bigger'
-		}
-		if (Number(number) < Number(num)) {
-			responContent = 'smaller'
-		}
-		if (Number(number) === Number(num)) {
-			responContent = 'equal'
-			setRandomNum()
-		}
+		const { number } = req.params
+
+		const responContent = (Number(number) > Number(num) && 'bigger')
+		|| (Number(number) < Number(num) && 'smaller') || (Number(number) === Number(num) && 'equal') || ''
+
+		const set = responContent === 'equal' ? () => { setRandomNum() } : () => {}
+		set()
+
 		res.send(responContent)
 	})
 })
