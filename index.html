@@ -22,7 +22,11 @@
     function restart(){
         $.post('/start',function(){
             $('#resultTxt').text('OK');
+
+
             $('#restartButton').text('Restart');
+
+            
             $('#numberInput').attr('disabled',false)
         })
     }
