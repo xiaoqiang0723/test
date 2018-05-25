@@ -16,13 +16,14 @@ client.on('error', (err) => {
 })
 
 function setRandomNum(callback) {
-	const randomNumF = Math.random() * 100
+	const randomNumF = Math.random() * 10000
 	const randomNum = randomNumF.toFixed(0)
 	client.set(cacheKey, `${randomNum}`, callback)
 }
 
 app.post('/start', (req, res) => {
 	setRandomNum(() => {
+		console.log('start')
 		res.send('OK')
 	})
 })
@@ -33,6 +34,8 @@ app.get('/:number', (req, res) => {
 			res.send(error)
 		}
 		const { number } = req.params
+
+		console.log(number)
 
 		const responContent = (Number(number) > Number(num) && 'bigger')
 		|| (Number(number) < Number(num) && 'smaller') || (Number(number) === Number(num) && 'equal') || ''
