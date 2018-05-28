@@ -6,78 +6,100 @@ function sendMsg(error) {
 	sendErrorMsg()
 }
 
-let maxNumber = 1000000
-let minNumber = 0
 
 // callback方式
-function callback(i, cb) {
-	request.get(`http://localhost:3000/${i}`, (error, response, body) => {
+function callback(i, maxNumber, minNumber, cb) {
+	const options = {}
+	options.uri = `http://localhost:3000/${i}`
+	options.headers = { formtype: 'callback' }
+
+	request.get(options, (error, response, body) => {
 		if (!error && response.statusCode === 200) {
-			if (body === 'equal') { console.log(i); cb(i) } else if (body === 'bigger') {
-				maxNumber = i
-				let j = (maxNumber + minNumber) / 2
-				const remainder = (maxNumber + minNumber) % 2
-				if (remainder > 0) j = Number(j.toFixed(0)) + 1
-				callback(j, cb)
+			if (body === 'equal') {
+				console.log(i)
+				cb(i)
+			} else if (body === 'bigger') {
+				const maxNum = i
+				let j = (maxNum + minNumber) / 2
+				const remainder = (maxNum + minNumber) % 2
+				if (remainder > 0) j = Math.floor(j) + 1
+				callback(j, maxNum, minNumber, cb)
 			} else if (body === 'smaller') {
-				minNumber = i
+				const minNum = i
 				let j = (i + maxNumber) / 2
 				const remainder = (i + maxNumber) % 2
-				if (remainder > 0) j = Number(j.toFixed(0)) + 1
-				callback(j, cb)
+				if (remainder > 0) j = Math.floor(j) + 1
+				callback(j, maxNumber, minNum, cb)
 			}
 		}
 	})
 }
 
 // promise方式
-async function guessPromise(i) {
-	const number = await requestPromise(`http://localhost:3000/${i}`).then((response) => {
-		if (response === 'equal') { console.log(i); return i } else if (response === 'bigger') {
-			maxNumber = i
-			let j = (maxNumber + minNumber) / 2
-			const remainder = (maxNumber + minNumber) % 2
-			if (remainder > 0) j = Number(j.toFixed(0)) + 1
-			guessPromise(j)
+function guessPromise(i, maxNumber, minNumber, cb) {
+	const options = {}
+	options.uri = `http://localhost:3000/${i}`
+	options.headers = { formtype: 'promise' }
+
+	requestPromise(options).then((response) => {
+		if (response === 'equal') {
+			console.log(i)
+			cb(i)
+		} else if (response === 'bigger') {
+			const maxNum = i
+			let j = (maxNum + minNumber) / 2
+			const remainder = (maxNum + minNumber) % 2
+			if (remainder > 0) j = Math.floor(j) + 1
+			guessPromise(j, maxNum, minNumber, cb)
 		} else if (response === 'smaller') {
-			minNumber = i
+			const minNum = i
 			let j = (i + maxNumber) / 2
 			const remainder = (i + maxNumber) % 2
-			if (remainder > 0) j = Number(j.toFixed(0)) + 1
-			guessPromise(j)
+			if (remainder > 0) j = Math.floor(j) + 1
+			guessPromise(j, maxNumber, minNum, cb)
 		}
-		return 0
 	}).catch((e) => { sendMsg(e) })
-
-	return number
 }
 
 // async/await方式
-async function guessAsync(i) {
-	const result = await requestPromise(`http://localhost:3000/${i}`).catch((e) => { sendMsg(e) })
-	if (result === 'equal') { console.log(i); return i } else if (result === 'bigger') {
-		maxNumber = i
-		let j = (maxNumber + minNumber) / 2
-		const remainder = (maxNumber + minNumber) % 2
-		if (remainder > 0) j = Number(j.toFixed(0)) + 1
-		guessAsync(j)
+async function guessAsync(i, maxNumber, minNumber) {
+	const options = {}
+	options.uri = `http://localhost:3000/${i}`
+	options.headers = { formtype: 'async' }
+
+	const result = await requestPromise(options).catch((e) => { sendMsg(e) })
+	// console.log('result', result)
+	let number = 0
+	if (result === 'equal') {
+		console.log(i)
+		// console.log('1111111')
+		number = i
+	} else if (result === 'bigger') {
+		const maxNum = i
+		let j = (maxNum + minNumber) / 2
+		const remainder = (maxNum + minNumber) % 2
+		if (remainder > 0) j = Math.floor(j) + 1
+		number = await guessAsync(j, maxNum, minNumber)
 	} else if (result === 'smaller') {
-		minNumber = i
+		const minNum = i
 		let j = (i + maxNumber) / 2
 		const remainder = (i + maxNumber) % 2
-		if (remainder > 0) j = Number(j.toFixed(0)) + 1
-		guessAsync(j)
+		if (remainder > 0) j = Math.floor(j) + 1
+		number = await guessAsync(j, maxNumber, minNum)
 	}
-	return 0
+	return number
 }
 
 const options = {
 	method: 'POST',
 	uri: 'http://localhost:3000/start',
+	headers: {},
 }
 
-async function start() {
+async function start(headers) {
+	options.headers = headers
 	const result = await requestPromise(options).then((response) => {
+		console.log('response', response)
 		const flag = response === 'OK'
 		return flag
 	}).catch((e) => { sendMsg(e); return false })
@@ -89,35 +111,46 @@ async function start() {
 
 
 async function play(cb) {
-	const result = await start()
+	const maxNumber = 1000000
+	const minNumber = 0
+	const headers = {}
+	headers.formtype = 'callback'
+	const result = await start(headers)
 	// console.log('result', result)
 	// console.log(start())
-	if (result) { callback(minNumber, cb) }
+	if (result) { callback(0, maxNumber, minNumber, cb) }
 }
 
 async function palyAsync() {
-	const result = await start()
+	const maxNumber = 1000000
+	const minNumber = 0
+	const headers = {}
+	headers.formtype = 'async'
+	const result = await start(headers)
 	let number = 0
 	if (result) {
-		number = guessAsync(minNumber)
+		number = await guessAsync(0, maxNumber, minNumber)
+		console.log('guessNumber by async', number)
 	}
-	return number
 }
 
-async function palyPromise() {
-	const result = await start()
-	let number = 0
+async function palyPromise(cb) {
+	const maxNumber = 1000000
+	const minNumber = 0
+	const headers = {}
+	headers.formtype = 'promise'
+	const result = await start(headers)
 	if (result) {
-		number = await guessPromise(minNumber)
+		guessPromise(0, maxNumber, minNumber, cb)
 	}
-	return number
 }
 
 play((guessNumber) => {
-	console.log('guessNumber', guessNumber)
+	console.log('guessNumber by callback', guessNumber)
 })
 const guessNumber = palyAsync()
-console.log('guessNumber', guessNumber)
-const guessNumber2 = palyPromise()
-console.log('guessNumber', guessNumber2)
+console.log('guessNumber by async', guessNumber)
+palyPromise((i) => {
+	console.log('guessNumber by promise', i)
+})
 
