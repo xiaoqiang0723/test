@@ -16,7 +16,7 @@ client.on('error', (err) => {
 })
 
 function setRandomNum(callback) {
-	const randomNumF = Math.random() * 10000
+	const randomNumF = Math.random() * 1000000
 	const randomNum = randomNumF.toFixed(0)
 	client.set(cacheKey, `${randomNum}`, callback)
 }
