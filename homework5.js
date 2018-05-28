@@ -8,7 +8,9 @@ function sendMsg(error) {
 
 
 // callback方式
-function callback(i, maxNumber, minNumber, cb) {
+function callback(maxNumber, minNumber, cb) {
+	const i = Math.floor((maxNumber + minNumber) / 2)
+
 	const options = {}
 	options.uri = `http://localhost:3000/${i}`
 	options.headers = { formtype: 'callback' }
@@ -20,49 +22,45 @@ function callback(i, maxNumber, minNumber, cb) {
 				cb(i)
 			} else if (body === 'bigger') {
 				const maxNum = i
-				let j = (maxNum + minNumber) / 2
-				const remainder = (maxNum + minNumber) % 2
-				if (remainder > 0) j = Math.floor(j) + 1
-				callback(j, maxNum, minNumber, cb)
+				callback(maxNum, minNumber, cb)
 			} else if (body === 'smaller') {
 				const minNum = i
-				let j = (i + maxNumber) / 2
-				const remainder = (i + maxNumber) % 2
-				if (remainder > 0) j = Math.floor(j) + 1
-				callback(j, maxNumber, minNum, cb)
+				callback(maxNumber, minNum, cb)
 			}
 		}
 	})
 }
 
 // promise方式
-function guessPromise(i, maxNumber, minNumber, cb) {
+function guessPromise(maxNumber, minNumber) {
+	const i = Math.floor((maxNumber + minNumber) / 2)
+
 	const options = {}
 	options.uri = `http://localhost:3000/${i}`
 	options.headers = { formtype: 'promise' }
 
-	requestPromise(options).then((response) => {
+	let number = 0
+
+	return requestPromise(options).then((response) => {
 		if (response === 'equal') {
 			console.log(i)
-			cb(i)
+			number = i
+			return i
 		} else if (response === 'bigger') {
 			const maxNum = i
-			let j = (maxNum + minNumber) / 2
-			const remainder = (maxNum + minNumber) % 2
-			if (remainder > 0) j = Math.floor(j) + 1
-			guessPromise(j, maxNum, minNumber, cb)
+			return guessPromise(maxNum, minNumber)
 		} else if (response === 'smaller') {
 			const minNum = i
-			let j = (i + maxNumber) / 2
-			const remainder = (i + maxNumber) % 2
-			if (remainder > 0) j = Math.floor(j) + 1
-			guessPromise(j, maxNumber, minNum, cb)
+			return guessPromise(maxNumber, minNum)
 		}
+		return number
 	}).catch((e) => { sendMsg(e) })
 }
 
 // async/await方式
-async function guessAsync(i, maxNumber, minNumber) {
+async function guessAsync(maxNumber, minNumber) {
+	const i = Math.floor((maxNumber + minNumber) / 2)
+
 	const options = {}
 	options.uri = `http://localhost:3000/${i}`
 	options.headers = { formtype: 'async' }
@@ -72,20 +70,13 @@ async function guessAsync(i, maxNumber, minNumber) {
 	let number = 0
 	if (result === 'equal') {
 		console.log(i)
-		// console.log('1111111')
 		number = i
 	} else if (result === 'bigger') {
 		const maxNum = i
-		let j = (maxNum + minNumber) / 2
-		const remainder = (maxNum + minNumber) % 2
-		if (remainder > 0) j = Math.floor(j) + 1
-		number = await guessAsync(j, maxNum, minNumber)
+		number = await guessAsync(maxNum, minNumber)
 	} else if (result === 'smaller') {
 		const minNum = i
-		let j = (i + maxNumber) / 2
-		const remainder = (i + maxNumber) % 2
-		if (remainder > 0) j = Math.floor(j) + 1
-		number = await guessAsync(j, maxNumber, minNum)
+		number = await guessAsync(maxNumber, minNum)
 	}
 	return number
 }
@@ -117,8 +108,7 @@ async function play(cb) {
 	headers.formtype = 'callback'
 	const result = await start(headers)
 	// console.log('result', result)
-	// console.log(start())
-	if (result) { callback(0, maxNumber, minNumber, cb) }
+	if (result) { callback(maxNumber, minNumber, cb) }
 }
 
 async function palyAsync() {
@@ -127,30 +117,31 @@ async function palyAsync() {
 	const headers = {}
 	headers.formtype = 'async'
 	const result = await start(headers)
-	let number = 0
 	if (result) {
-		number = await guessAsync(0, maxNumber, minNumber)
-		console.log('guessNumber by async', number)
+		guessAsync(maxNumber, minNumber).then((number) => {
+			console.log('guessNumber by async', number)
+		})
 	}
 }
 
-async function palyPromise(cb) {
+async function palyPromise() {
 	const maxNumber = 1000000
 	const minNumber = 0
 	const headers = {}
 	headers.formtype = 'promise'
 	const result = await start(headers)
 	if (result) {
-		guessPromise(0, maxNumber, minNumber, cb)
+		guessPromise(maxNumber, minNumber).then((res) => {
+			console.log('guessNumber by promise', res)
+		})
 	}
 }
 
 play((guessNumber) => {
 	console.log('guessNumber by callback', guessNumber)
 })
-const guessNumber = palyAsync()
-console.log('guessNumber by async', guessNumber)
-palyPromise((i) => {
-	console.log('guessNumber by promise', i)
-})
+
+palyAsync()
+
+palyPromise()
 
