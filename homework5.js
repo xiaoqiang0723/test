@@ -5,11 +5,11 @@ const requestPromise = require('request-promise')
 function callback(maxNumber, minNumber, cb) {
 	const i = Math.floor((maxNumber + minNumber) / 2)
 
-	const options = {}
-	options.uri = `http://localhost:3000/${i}`
-	options.headers = { formtype: 'callback' }
+	// const options = {}
+	// options.uri = `http://localhost:3000/${i}`
+	// options.headers = { formtype: 'callback' }
 
-	request.get(options, (error, response, body) => {
+	request.get(`http://localhost:3000/${i}`, (error, response, body) => {
 		if (error) {
 			cb(error)
 		}
@@ -32,22 +32,19 @@ function callback(maxNumber, minNumber, cb) {
 function guessPromise(maxNumber, minNumber) {
 	const i = Math.floor((maxNumber + minNumber) / 2)
 
-	const options = {}
-	options.uri = `http://localhost:3000/${i}`
-	options.headers = { formtype: 'promise' }
+	// const options = {}
+	// options.uri = `http://localhost:3000/${i}`
+	// options.headers = { formtype: 'promise' }
 
-	let number = 0
-
-	return requestPromise(options).then((response) => {
+	return requestPromise(`http://localhost:3000/${i}`).then((response) => {
 		if (response === 'equal') {
-			number = i
 			return i
 		} else if (response === 'bigger') {
 			return guessPromise(i, minNumber)
 		} else if (response === 'smaller') {
 			return guessPromise(maxNumber, i)
 		}
-		return number
+		return 0
 	})
 }
 
@@ -55,30 +52,31 @@ function guessPromise(maxNumber, minNumber) {
 async function guessAsync(maxNumber, minNumber) {
 	const i = Math.floor((maxNumber + minNumber) / 2)
 
-	const options = {}
-	options.uri = `http://localhost:3000/${i}`
-	options.headers = { formtype: 'async' }
+	// const options = {}
+	// options.uri = `http://localhost:3000/${i}`
+	// options.headers = { formtype: 'async' }
 
-	const result = await requestPromise(options)
-	let number = 0
+	const result = await requestPromise(`http://localhost:3000/${i}`)
 	if (result === 'equal') {
-		number = i
+		return i
 	} else if (result === 'bigger') {
-		number = await guessAsync(i, minNumber)
+		return guessAsync(i, minNumber)
 	} else if (result === 'smaller') {
-		number = await guessAsync(maxNumber, i)
+		return guessAsync(maxNumber, i)
 	}
-	return number
+	return 0
 }
 
 const options = {
 	method: 'POST',
 	uri: 'http://localhost:3000/start',
-	headers: {},
 }
 
 async function start(headers) {
-	options.headers = headers
+	if (headers) {
+		options.headers = headers
+	}
+
 	const result = await requestPromise(options).then((response) => {
 		console.log('response', response)
 		const flag = response === 'OK'
@@ -90,69 +88,86 @@ async function start(headers) {
 	return result
 }
 
-
-async function play(cb) {
+async function play() {
 	const maxNumber = 1000000
 	const minNumber = 0
-	const headers = {}
-	headers.formtype = 'callback'
-	const result = await start(headers).catch(err => cb(err))
-	if (result) { callback(maxNumber, minNumber, cb) }
-}
-
-async function palyAsync(cb) {
-	const maxNumber = 1000000
-	const minNumber = 0
-	const headers = {}
-	headers.formtype = 'async'
-	const result = await start(headers).catch(err => cb(err))
+	const result = await start().catch((err) => { console.log(console.log('err', err)) })
 	if (result) {
-		guessAsync(maxNumber, minNumber).then((number) => {
-			cb(null, number)
+		callback(maxNumber, minNumber, (err, guessNumber) => {
+			if (!err) {
+				console.log('guessNumber by callback', guessNumber)
+			} else {
+				console.log('err', err)
+			}
+		})
+
+		guessAsync(maxNumber, minNumber).then((res) => {
+			console.log('guessNumber by async', res)
 		}).catch((err) => {
 			console.log('err', err)
-			cb(err)
 		})
-	}
-}
 
-async function palyPromise(cb) {
-	const maxNumber = 1000000
-	const minNumber = 0
-	const headers = {}
-	headers.formtype = 'promise'
-	const result = await start(headers).catch(err => cb(err))
-	if (result) {
 		guessPromise(maxNumber, minNumber).then((res) => {
-			cb(null, res)
+			console.log('guessNumber by promise', res)
 		}).catch((err) => {
 			console.log('err', err)
-			cb(err)
 		})
 	}
 }
 
-play((err, guessNumber) => {
-	if (!err) {
-		console.log('guessNumber by callback', guessNumber)
-	} else {
-		console.log('err', err)
-	}
-})
+play()
 
-palyAsync((err, number) => {
-	if (!err) {
-		console.log('guessNumber by async', number)
-	} else {
-		console.log('err', err)
-	}
-})
 
-palyPromise((err, res) => {
-	if (!err) {
-		console.log('guessNumber by promise', res)
-	} else {
-		console.log('err', err)
-	}
-})
+// async function play(cb) {
+// 	const maxNumber = 1000000
+// 	const minNumber = 0
+// 	const headers = {}
+// 	headers.formtype = 'callback'
+// 	const result = await start(headers).catch(err => cb(err))
+// 	if (result) { callback(maxNumber, minNumber, cb) }
+// }
+
+// async function palyAsync() {
+// 	const maxNumber = 1000000
+// 	const minNumber = 0
+// 	const headers = {}
+// 	headers.formtype = 'async'
+// 	const result = await start(headers)
+// 	if (result) {
+// 		return guessAsync(maxNumber, minNumber)
+// 	}
+// 	return 0
+// }
+
+// async function palyPromise() {
+// 	const maxNumber = 1000000
+// 	const minNumber = 0
+// 	const headers = {}
+// 	headers.formtype = 'promise'
+// 	const result = await start(headers)
+// 	if (result) {
+// 		return guessPromise(maxNumber, minNumber)
+// 	}
+// 	return 0
+// }
+
+// play((err, guessNumber) => {
+// 	if (!err) {
+// 		console.log('guessNumber by callback', guessNumber)
+// 	} else {
+// 		console.log('err', err)
+// 	}
+// })
+
+// palyAsync().then((res) => {
+// 	console.log('guessNumber by async', res)
+// }).catch((err) => {
+// 	console.log('err', err)
+// })
+
+// palyPromise().then((res) => {
+// 	console.log('guessNumber by promise', res)
+// }).catch((err) => {
+// 	console.log('err', err)
+// })
 
