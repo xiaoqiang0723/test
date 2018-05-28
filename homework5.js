@@ -1,12 +1,6 @@
 const request = require('request')
 const requestPromise = require('request-promise')
 
-function sendMsg(error) {
-	const sendErrorMsg = error ? () => { console.log('e', error) } : () => { console.log('网络异常') }
-	sendErrorMsg()
-}
-
-
 // callback方式
 function callback(maxNumber, minNumber, cb) {
 	const i = Math.floor((maxNumber + minNumber) / 2)
@@ -16,6 +10,12 @@ function callback(maxNumber, minNumber, cb) {
 	options.headers = { formtype: 'callback' }
 
 	request.get(options, (error, response, body) => {
+		if (error) {
+			cb(error)
+		}
+		if (response.statusCode !== 200) {
+			cb(new Error('网络异常，请稍后再试'))
+		}
 		if (!error && response.statusCode === 200) {
 			if (body === 'equal') {
 				cb(error, i)
@@ -24,8 +24,6 @@ function callback(maxNumber, minNumber, cb) {
 			} else if (body === 'smaller') {
 				callback(maxNumber, i, cb)
 			}
-		} else {
-			cb(error, i)
 		}
 	})
 }
@@ -50,7 +48,7 @@ function guessPromise(maxNumber, minNumber) {
 			return guessPromise(maxNumber, i)
 		}
 		return number
-	}).catch((e) => { sendMsg(e) })
+	})
 }
 
 // async/await方式
@@ -61,7 +59,7 @@ async function guessAsync(maxNumber, minNumber) {
 	options.uri = `http://localhost:3000/${i}`
 	options.headers = { formtype: 'async' }
 
-	const result = await requestPromise(options).catch((e) => { sendMsg(e) })
+	const result = await requestPromise(options)
 	let number = 0
 	if (result === 'equal') {
 		number = i
@@ -85,7 +83,7 @@ async function start(headers) {
 		console.log('response', response)
 		const flag = response === 'OK'
 		return flag
-	}).catch((e) => { sendMsg(e); return false })
+	})
 	if (result) {
 		console.log('result', result)
 	}
@@ -98,7 +96,7 @@ async function play(cb) {
 	const minNumber = 0
 	const headers = {}
 	headers.formtype = 'callback'
-	const result = await start(headers)
+	const result = await start(headers).catch(err => cb(err))
 	if (result) { callback(maxNumber, minNumber, cb) }
 }
 
@@ -107,13 +105,13 @@ async function palyAsync(cb) {
 	const minNumber = 0
 	const headers = {}
 	headers.formtype = 'async'
-	const result = await start(headers)
+	const result = await start(headers).catch(err => cb(err))
 	if (result) {
 		guessAsync(maxNumber, minNumber).then((number) => {
 			cb(null, number)
 		}).catch((err) => {
 			console.log('err', err)
-			cb(err, null)
+			cb(err)
 		})
 	}
 }
@@ -123,13 +121,13 @@ async function palyPromise(cb) {
 	const minNumber = 0
 	const headers = {}
 	headers.formtype = 'promise'
-	const result = await start(headers)
+	const result = await start(headers).catch(err => cb(err))
 	if (result) {
 		guessPromise(maxNumber, minNumber).then((res) => {
 			cb(null, res)
 		}).catch((err) => {
 			console.log('err', err)
-			cb(err, null)
+			cb(err)
 		})
 	}
 }
