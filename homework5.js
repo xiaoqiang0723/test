@@ -91,27 +91,27 @@ async function start(headers) {
 async function play() {
 	const maxNumber = 1000000
 	const minNumber = 0
-	const result = await start().catch((err) => { console.log(console.log('err', err)) })
-	if (result) {
-		callback(maxNumber, minNumber, (err, guessNumber) => {
-			if (!err) {
-				console.log('guessNumber by callback', guessNumber)
-			} else {
-				console.log('err', err)
-			}
-		})
+	try {
+		const result = await start()
+		if (result) {
+			callback(maxNumber, minNumber, async (err, guessNumber) => {
+				if (!err) {
+					console.log('guessNumber by callback', guessNumber)
 
-		guessAsync(maxNumber, minNumber).then((res) => {
-			console.log('guessNumber by async', res)
-		}).catch((err) => {
-			console.log('err', err)
-		})
+					await guessAsync(maxNumber, minNumber).then((res) => {
+						console.log('guessNumber by async', res)
+					})
 
-		guessPromise(maxNumber, minNumber).then((res) => {
-			console.log('guessNumber by promise', res)
-		}).catch((err) => {
-			console.log('err', err)
-		})
+					guessPromise(maxNumber, minNumber).then((res) => {
+						console.log('guessNumber by promise', res)
+					})
+				} else {
+					throw err
+				}
+			})
+		}
+	} catch (e) {
+		console.log('err', e)
 	}
 }
 
