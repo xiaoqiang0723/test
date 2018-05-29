@@ -1,5 +1,6 @@
 const request = require('request')
 const requestPromise = require('request-promise')
+const util = require('util')
 
 // callback方式
 function callback(maxNumber, minNumber, cb) {
@@ -88,27 +89,48 @@ async function start(headers) {
 	return result
 }
 
+// async function play() {
+// 	const maxNumber = 1000000
+// 	const minNumber = 0
+// 	try {
+// 		const result = await start()
+// 		if (result) {
+// 			callback(maxNumber, minNumber, (err, guessNumber) => {
+// 				if (!err) {
+// 					console.log('guessNumber by callback', guessNumber)
+
+// 					guessAsync(maxNumber, minNumber).then((res) => {
+// 						console.log('guessNumber by async', res)
+// 						guessPromise(maxNumber, minNumber).then((ress) => {
+// 							console.log('guessNumber by promise', ress)
+// 						})
+// 					})
+// 				} else {
+// 					throw err
+// 				}
+// 			})
+// 		}
+// 	} catch (e) {
+// 		console.log('err', e)
+// 	}
+// }
+
 async function play() {
 	const maxNumber = 1000000
 	const minNumber = 0
 	try {
 		const result = await start()
 		if (result) {
-			callback(maxNumber, minNumber, async (err, guessNumber) => {
-				if (!err) {
-					console.log('guessNumber by callback', guessNumber)
+			const res1 = await guessAsync(maxNumber, minNumber)
+			console.log('guessNumber by async', res1)
 
-					await guessAsync(maxNumber, minNumber).then((res) => {
-						console.log('guessNumber by async', res)
-					})
+			const res2 = await guessPromise(maxNumber, minNumber)
+			console.log('guessNumber by promise', res2)
 
-					guessPromise(maxNumber, minNumber).then((res) => {
-						console.log('guessNumber by promise', res)
-					})
-				} else {
-					throw err
-				}
-			})
+			const promiseCallback = util.promisify(callback)
+
+			const res3 = await promiseCallback(maxNumber, minNumber)
+			console.log('guessNumber by callback', res3)
 		}
 	} catch (e) {
 		console.log('err', e)
